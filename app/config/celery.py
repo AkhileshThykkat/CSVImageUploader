@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .env_loader import settings
 from app.models import Image
+from app.utils import upload_compressed_image
+from app.repos import ImageRepository
 
 celery = Celery(__name__, broker=settings.REDIS_URL)
 MAX_RETRIES = 3
@@ -20,7 +22,6 @@ async def process_image(self, image_id: str, session: AsyncSession):
             async with aiohttp.ClientSession() as client:
                 async with client.get(image.input_url) as response:
                     if response.status == 200:
-                        # Simulate image compression (50% quality reduction)
                         compressed_image_url = await upload_compressed_image(response.content)
                         image.output_url = compressed_image_url
                         await session.commit()
@@ -33,6 +34,6 @@ async def process_image(self, image_id: str, session: AsyncSession):
                 print(f"Image {image_id} failed after max retries.")
             else:
                 print(f"Retrying image {image_id}, attempt {image.retry_count}")
-                self.retry(countdown=5)  # Retry after 5 seconds
+                self.retry(countdown=5) 
             
             await session.commit()

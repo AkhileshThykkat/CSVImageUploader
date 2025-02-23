@@ -1,0 +1,1 @@
+from .image_processing import upload_compressed_image
